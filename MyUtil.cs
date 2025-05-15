@@ -54,9 +54,9 @@
     ///<summary>Nullableの値を要素数が1か0のリストに変換する</summary>
     public static List<T> MyMaybeToList<T>(this T? maybeElem) where T : struct => maybeElem != null ? [maybeElem.Value] : [];
     ///<summary>並列で実行されるAsync処理適用のForEach</summary>
-    public static async Task MyAsyncForEachParallel<T>(this IEnumerable<T> list,Func<T,Task> asyncAction) => await Task.WhenAll(list.Select(elem => Task.Run(async () => await asyncAction(elem))));
+    public static async Task MyAsyncForEachParallel<T>(this IEnumerable<T> list,Func<T,Task> asyncAction) => await Parallel.ForEachAsync(list,async (elem,_) => await asyncAction(elem));
     ///<summary>直列で実行されるAsync処理適用のForEach</summary>
-    public static void MyAsyncForEachSequential<T>(this IEnumerable<T> list,Func<T,Task> asyncAction) => list.ToList().ForEach(elem => asyncAction(elem).RunSynchronously());
+    public static async Task MyAsyncForEachSequential<T>(this IEnumerable<T> list,Func<T,Task> asyncAction) => await list.Aggregate(Task.CompletedTask,async (task,elem) => { await task; await asyncAction(elem); });
     ///<summary>操作途中の値も含めてリストで返す</summary>
     public static IEnumerable<T2> MyScan<T1, T2>(this IEnumerable<T1> input,Func<T2,T1,T2> next,T2 state) => [.. input.Aggregate(new List<T2> { state },(stateList,item) => [.. stateList.Append(next(stateList.Last(),item))])];
     ///<summary>操作をしながら操作途中の値も含めてリストで返す</summary>
